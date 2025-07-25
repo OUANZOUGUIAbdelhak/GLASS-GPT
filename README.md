@@ -11,8 +11,6 @@ Welcome! This repository documents a complete AI-driven workflow developed durin
 * [🔬 Project Background](#-project-background)
 * [🧰 Technologies Used](#-technologies-used)
 * [🧠 AI/ML Techniques](#-aiml-techniques)
-* [📁 Repository Structure](#-repository-structure)
-* [🚀 Getting Started](#-getting-started)
 * [⚙️ Project Workflow](#-project-workflow)
 * [📊 Final Dataset & Modeling](#-final-dataset--modeling)
 * [📎 License & Citation](#-license--citation)
@@ -56,76 +54,6 @@ The **initial dissolution rate** is one of the key metrics, but gathering experi
 * **Unit conversion and normalization** of compositions
 * **Tabular data organization** for ML
 * **Neural network modeling** of the dissolution rate
-
----
-
-## 📁 Repository Structure
-
-```bash
-glass-ai-dissolution-rate/
-├── README.md
-├── LICENSE
-├── requirements.txt
-├── data/
-│   ├── raw_articles/             # Original collected articles (PDFs)
-│   ├── processed_articles/       # OCR-corrected articles
-│   └── final_dataset.csv         # 107-column dataset ready for ML
-├── articles/
-│   └── valid_articles_metadata.json
-├── scripts/
-│   ├── run_langflow_pipeline.py  # Executes the full Langflow pipeline
-│   └── convert_composition.py    # Converts composition to mol% of elements
-├── notebooks/
-│   ├── 01_article_validation.ipynb
-│   ├── 02_extraction_flow.ipynb
-│   └── 03_model_training.ipynb
-├── models/
-│   └── trained_model.pkl         # Final regression model
-├── langflow/
-│   └── flows/                    # Langflow JSON files for each step
-├── docs/
-│   ├── architecture.png          # Visual pipeline diagram
-│   └── explanation.md            # Additional written explanations
-```
-
----
-
-## 🚀 Getting Started
-
-### 1. Clone the repo
-
-```bash
-git clone https://github.com/your-username/glass-ai-dissolution-rate.git
-cd glass-ai-dissolution-rate
-```
-
-### 2. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Prepare Langflow
-
-> Install and run Langflow locally:
-
-```bash
-pip install langflow==1.2.0
-langflow run
-```
-
-Then import JSON flows from `/langflow/flows/`.
-
-### 4. Run the workflow
-
-Use the included Python scripts and notebooks to execute the Langflow pipeline for:
-
-* Validating article relevance
-* Extracting compositions
-* Converting to mol%
-* Extracting experimental parameters
-* Populating the SQL database
-* Training the ML model
 
 ---
 
