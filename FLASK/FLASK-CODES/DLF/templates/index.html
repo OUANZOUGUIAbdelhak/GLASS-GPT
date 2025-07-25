@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de l'altération des verres</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- DataTables -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
+    <!-- DataTables FixedHeader -->
+    <link href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.bootstrap5.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Autres balises meta et link -->
+    <link rel="icon" href="/home/intra.cea.fr/ao280403/Bureau/Docling_Langflow_flask/DLF/static/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/home/intra.cea.fr/ao280403/Bureau/Docling_Langflow_flask/DLF/static/favicon.ico" type="image/x-icon">
+
+    <style>
+        .gradient-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+    
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            overflow-x: hidden; /* Enable horizontal scrolling */
+        }
+    
+        .table-hover tbody tr:hover {
+            background-color: rgba(118, 75, 162, 0.1);
+            transform: translateX(5px);
+            transition: all 0.3s ease;
+        }
+    
+        .detail-row {
+            background-color: #f8f9fa;
+        }
+    
+        .badge-glass {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            border-radius: 10px;
+            padding: 8px 15px;
+        }
+    
+        .download-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 25px;
+            transition: all 0.3s ease;
+        }
+    
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4);
+        }
+    
+        .delete-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 5px 10px;
+            transition: all 0.3s ease;
+        }
+    
+        .delete-btn:hover {
+            background-color: #faf9f9;
+        }
+    
+        #progress-bar {
+            display: none;
+            margin-top: 20px;
+        }
+    
+        #loading-icon {
+            display: none;
+            margin-top: 20px;
+        }
+    
+        #download-excel-btn {
+            margin-top: 20px;
+        }
+
+        /* Empêche le tableau de se couper */
+        #glassTable {
+            table-layout: auto !important; /* Laisse les colonnes s'adapter */
+            width: 100% !important;
+        }
+
+        /* Add borders to table cells */
+        #glassTable td, #glassTable th {
+            border: 1px solid #cfcfcf;
+            min-width: 150px; /* Set a minimum width for cells */
+            white-space: nowrap; /* Prevent text from wrapping */
+        }
+    
+        /* Modern color for column titles */
+        #glassTable th {
+            background-color: #667eea; /* Modern color for headers */
+            color: white;
+            font-weight: bold;
+        }
+    
+
+        /* S'assure que l'en-tête suit bien le scroll */
+        .dataTables_scrollHead {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 1020 !important;
+            background: white;
+            width: 100% !important;
+        }
+
+        .dataTables_scrollHeadInner {
+            width: 100% !important; /* Assure que le header suit le tableau */
+        }
+
+        .dataTables_info {
+            position: relative;
+            bottom: 0;
+            padding-bottom: 10px;
+            white-space: nowrap; /* Empêche le texte d’être coupé */
+        }
+
+        /* Sous-colonnes fixes */
+        .dataTables_scrollHead thead tr:nth-child(2) th {
+            color: rgb(3, 3, 3) !important; /* Rendre le texte blanc */
+            font-weight: bold;
+        }
+
+
+        /* Ajustements pour l'ombre et l'espacement */
+        .glass-card {
+            position: relative;
+            padding-bottom: 30px;
+        }
+
+        .fixed-scrollbar {
+            position: sticky;
+            bottom: 0;
+            background: #f8f9fa;
+            height: 17px;
+            z-index: 1000;
+            margin-top: -17px;
+        }
+    
+        /* Cache la barre de défilement originale */
+        .dataTables_scrollBody::-webkit-scrollbar {
+            display: none;
+        }
+    
+        /* Garde le défilement fluide */
+        .dataTables_scrollBody {
+            overflow-x: auto !important;
+            max-width: 100% !important;
+        }
+
+    </style>
+    
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="glass-card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0 text-dark">
+                    <i class="fas fa-glass-whiskey me-2"></i>Tableau d'altération des verres
+                </h1>
+                <button id="download-excel-btn" class="btn download-btn text-white">
+                    <i class="fas fa-file-excel me-2"></i>Télécharger le tableau en Excel
+                </button>
+            </div>
+
+            <form id="upload-form" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="file" class="form-label">Télécharger un fichier PDF scanné</label>
+                    <input class="form-control" type="file" id="file" name="file">
+                </div>
+                <button type="submit" class="btn btn-primary">Télécharger</button>
+            </form>
+
+            <div id="progress-bar" class="progress">
+                <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+
+            <div id="loading-icon" class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+
+            <table id="glassTable" class="table table-hover table-borderless" style="width:100%">
+                <thead class="gradient-header">
+                    <tr class="main-header">
+                        <th rowspan="2">Supprimer</th>
+                        <th colspan="4">Document de Référence</th>
+                        <th rowspan="2">Type de Verre</th>
+                        <th colspan="70">Composition du verre en mol%</th>
+                        <th colspan="5">Propriétés du verre</th>
+                        <th colspan="27">Caractéristiques de l'expérience d'altération</th>
+                    </tr>
+                    <tr class="sub-header">
+                        <!-- Colonnes Document de Référence -->
+                        <th>Type</th>
+                        <th>Titre</th>
+                        <th>Référence</th>
+                        <th>Premier Auteur</th>
+
+                        <!-- Colonnes Composition du verre (70 éléments) -->
+                        <th>Li</th><th>B</th><th>O</th><th>Na</th><th>Mg</th><th>Al</th>
+                        <th>Si</th><th>P</th><th>K</th><th>Ca</th><th>Ti</th><th>V</th>
+                        <th>Cr</th><th>Mn</th><th>Fe</th><th>Co</th><th>Ni</th><th>Cu</th>
+                        <th>Zn</th><th>Ga</th><th>Ge</th><th>As</th><th>Se</th><th>Rb</th>
+                        <th>Sr</th><th>Y</th><th>Zr</th><th>Nb</th><th>Mo</th><th>Tc</th>
+                        <th>Ru</th><th>Rh</th><th>Pd</th><th>Ag</th><th>Cd</th><th>In</th>
+                        <th>Sn</th><th>Sb</th><th>Te</th><th>I</th><th>Cs</th><th>Ba</th>
+                        <th>La</th><th>Hf</th><th>Ta</th><th>W</th><th>Re</th><th>Os</th>
+                        <th>Ir</th><th>Pt</th><th>Au</th><th>Hg</th><th>Tl</th><th>Pb</th>
+                        <th>Bi</th><th>Po</th><th>At</th><th>Rn</th><th>Ce</th><th>Pr</th>
+                        <th>Nd</th><th>S_autres_TR</th><th>Th</th><th>U</th><th>Pu</th>
+                        <th>Np</th><th>Am</th><th>Cm</th><th>S_autres_An</th><th>Somme</th>
+
+                        <!-- Propriétés du verre -->
+                        <th>Densité (g⋅cm<sup>-3</sup>)</th>
+                        <th>Homogénéité</th>
+                        <th>% B(IV)</th>
+                        <th>Irradié</th>
+                        <th>Caractéristiques si irradié</th>
+
+                        <!-- Caractéristiques de l'expérience -->
+                        <th>Température (°C)</th>
+                        <th>Statique/dynamique</th>
+                        <th>Plage granulo si poudre (µm)</th>
+                        <th>Surface spécifique géométrique si poudre (cm<sup>-2</sup>)</th>
+                        <th>Surface spécifique BET si poudre (cm<sup>-2</sup>)</th>
+                        <th>Qualité polissage si monolithe</th>
+                        <th>Masse verre (g)</th>
+                        <th>S(verre) (cm<sup>-2</sup>) </th>
+                        <th>V(solution) (L)</th>
+                        <th>Débit solution</th>
+                        <th>pH initial (T amb)</th>
+                        <th>pH initial (T essai)</th>
+                        <th>Compo solution</th>
+                        <th>Durée expérience (h)</th>
+                        <th>pH final (T amb)</th>
+                        <th>pH final (T essai)</th>
+                        <th>Normalisation vitesse (Spm ou SBET)</th>
+                        <th>V₀(Si) (g m<sup>-2</sup> d<sup>-1</sup>)</th>
+                        <th>r²</th>
+                        <th>Ordonnée origine</th>
+                        <th>V₀(B) (g m<sup>-2</sup> d<sup>-1</sup>)</th>
+                        <th>Ordonnée origine</th>
+                        <th>V₀(Na) (g m<sup>-2</sup> d<sup>-1</sup>)</th>
+                        <th>r²</th>
+                        <th>Ordonnée origine</th>
+                        <th>V₀(ΔM) (g m<sup>-2</sup> d<sup>-1</sup>)</th>
+                        <th>Congruence (Na/Si)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in glass_data %}
+                        {% for glass_type in entry.glass_types %}
+                        <tr>
+                            <td>
+                                <form action="{{ url_for('delete_document_reference', id=entry.id) }}" method="post">
+                                    <button type="submit" class="delete-btn btn btn-danger btn-sm">❌</button>
+                                </form>
+                            </td>
+                            <td>{{ entry.type_document }}</td>
+                            <td>{{ entry.titre }}</td>
+                            <td>{{ entry.reference }}</td>
+                            <td>{{ entry.premier_auteur }}</td>
+                            <td>{{ glass_type.type }}</td>
+
+                            <!-- Composition du verre -->
+                            <td>{{ glass_type.Li }}</td>
+                            <td>{{ glass_type.B }}</td>
+                            <td>{{ glass_type.O }}</td>
+                            <td>{{ glass_type.Na }}</td>
+                            <td>{{ glass_type.Mg }}</td>
+                            <td>{{ glass_type.Al }}</td>
+                            <td>{{ glass_type.Si }}</td>
+                            <td>{{ glass_type.P }}</td>
+                            <td>{{ glass_type.K }}</td>
+                            <td>{{ glass_type.Ca }}</td>
+                            <td>{{ glass_type.Ti }}</td>
+                            <td>{{ glass_type.V }}</td>
+                            <td>{{ glass_type.Cr }}</td>
+                            <td>{{ glass_type.Mn }}</td>
+                            <td>{{ glass_type.Fe }}</td>
+                            <td>{{ glass_type.Co }}</td>
+                            <td>{{ glass_type.Ni }}</td>
+                            <td>{{ glass_type.Cu }}</td>
+                            <td>{{ glass_type.Zn }}</td>
+                            <td>{{ glass_type.Ga }}</td>
+                            <td>{{ glass_type.Ge }}</td>
+                            <td>{{ glass_type.As }}</td>
+                            <td>{{ glass_type.Se }}</td>
+                            <td>{{ glass_type.Rb }}</td>
+                            <td>{{ glass_type.Sr }}</td>
+                            <td>{{ glass_type.Y }}</td>
+                            <td>{{ glass_type.Zr }}</td>
+                            <td>{{ glass_type.Nb }}</td>
+                            <td>{{ glass_type.Mo }}</td>
+                            <td>{{ glass_type.Tc }}</td>
+                            <td>{{ glass_type.Ru }}</td>
+                            <td>{{ glass_type.Rh }}</td>
+                            <td>{{ glass_type.Pd }}</td>
+                            <td>{{ glass_type.Ag }}</td>
+                            <td>{{ glass_type.Cd }}</td>
+                            <td>{{ glass_type.In }}</td>
+                            <td>{{ glass_type.Sn }}</td>
+                            <td>{{ glass_type.Sb }}</td>
+                            <td>{{ glass_type.Te }}</td>
+                            <td>{{ glass_type.I }}</td>
+                            <td>{{ glass_type.Cs }}</td>
+                            <td>{{ glass_type.Ba }}</td>
+                            <td>{{ glass_type.La }}</td>
+                            <td>{{ glass_type.Hf }}</td>
+                            <td>{{ glass_type.Ta }}</td>
+                            <td>{{ glass_type.W }}</td>
+                            <td>{{ glass_type.Re }}</td>
+                            <td>{{ glass_type.Os }}</td>
+                            <td>{{ glass_type.Ir }}</td>
+                            <td>{{ glass_type.Pt }}</td>
+                            <td>{{ glass_type.Au }}</td>
+                            <td>{{ glass_type.Hg }}</td>
+                            <td>{{ glass_type.Tl }}</td>
+                            <td>{{ glass_type.Pb }}</td>
+                            <td>{{ glass_type.Bi }}</td>
+                            <td>{{ glass_type.Po }}</td>
+                            <td>{{ glass_type.At }}</td>
+                            <td>{{ glass_type.Rn }}</td>
+                            <td>{{ glass_type.Ce }}</td>
+                            <td>{{ glass_type.Pr }}</td>
+                            <td>{{ glass_type.Nd }}</td>
+                            <td>{{ glass_type.S_autres_TR }}</td>
+                            <td>{{ glass_type.Th }}</td>
+                            <td>{{ glass_type.U }}</td>
+                            <td>{{ glass_type.Pu }}</td>
+                            <td>{{ glass_type.Np }}</td>
+                            <td>{{ glass_type.Am }}</td>
+                            <td>{{ glass_type.Cm }}</td>
+                            <td>{{ glass_type.S_autres_An }}</td>
+                            <td>{{ glass_type.Somme }}</td>
+
+                            <!-- Propriétés du verre -->
+                            <td>{{ glass_type.Densité }}</td>
+                            <td>{{ glass_type.Homogénéité }}</td>
+                            <td>{{ glass_type.B_IV }}</td>
+                            <td>{{ glass_type.Irradié }}</td>
+                            <td>{{ glass_type.Caractéristiques_si_irradié }}</td>
+
+                            <!-- Caractéristiques de l'expérience -->
+                            <td>{{ glass_type.Température }}</td>
+                            <td>{{ glass_type.Statique_dynamique }}</td>
+                            <td>{{ glass_type.Plage_granulométrique_si_poudre }}</td>
+                            <td>{{ glass_type.Surface_spécifique_géométrique_si_poudre }}</td>
+                            <td>{{ glass_type.Surface_spécifique_BET_si_poudre }}</td>
+                            <td>{{ glass_type.Qualité_de_polissage_si_monolithe }}</td>
+                            <td>{{ glass_type.Masse_du_verre }}</td>
+                            <td>{{ glass_type.Surface_du_verre_S }}</td>
+                            <td>{{ glass_type.Volume_de_la_solution_V }}</td>
+                            <td>{{ glass_type.Débit_de_la_solution }}</td>
+                            <td>{{ glass_type.pH_initial_T_amb }}</td>
+                            <td>{{ glass_type.pH_initial_T_essai }}</td>
+                            <td>{{ glass_type.Composition_de_la_solution }}</td>
+                            <td>{{ glass_type.Durée_de_l_expérience }}</td>
+                            <td>{{ glass_type.pH_final_T_amb }}</td>
+                            <td>{{ glass_type.pH_final_T_essai }}</td>
+                            <td>{{ glass_type.Normalisation_de_la_vitesse_Sgeo_ou_SBET }}</td>
+                            <td>{{ glass_type.V0_Si_ou_r0_Si }}</td>
+                            <td>{{ glass_type.r2_Si }}</td>
+                            <td>{{ glass_type.Ordonnée_à_l_origine_Si }}</td>
+                            <td>{{ glass_type.V0_B_ou_r0_B }}</td>
+                            <td>{{ glass_type.Ordonnée_à_l_origine_B }}</td>
+                            <td>{{ glass_type.V0_Na_ou_r0_Na }}</td>
+                            <td>{{ glass_type.r2_Na }}</td>
+                            <td>{{ glass_type.Ordonnée_à_l_origine_Na }}</td>
+                            <td>{{ glass_type.V0_ΔM_ou_r0_ΔM }}</td>
+                            <td>{{ glass_type.Congruence }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>               
+            </table>
+            <div class="fixed-scrollbar" id="fixedScroll">
+                <div id="scrollContent" style="height: 1px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var table = $('#glassTable').DataTable({
+                scrollX: true, // Assure le défilement horizontal
+                scrollY: '60vh', // Ajuste la hauteur visible
+                autoWidth: false, // Évite que les colonnes se cassent
+                fixedHeader: {
+                    header: true,
+                    headerOffset: $('.navbar').outerHeight() || 40
+                },
+                paging: false,
+                searching: false,
+                lengthChange: false,
+                ordering: true,
+                responsive: false,
+                language: {
+                    search: '<i class="fas fa-search"></i>',
+                    searchPlaceholder: "Search records..."
+                },
+                columnDefs: [
+                    {
+                        orderable: false,
+                        targets: [0],
+                        className: 'no-sticky'
+                    }
+                ],
+                initComplete: function() {
+                    this.api().columns.adjust();
+                    $('.dataTables_scrollHead').css({
+                        'box-shadow': '0 2px 15px rgba(0,0,0,0.1)'
+                    });
+
+                    // Mise à jour correcte après redimensionnement
+                    $(window).on('resize', function() {
+                        setTimeout(() => {
+                            $('#glassTable').DataTable().columns.adjust();
+                        }, 500);
+                    });
+                }
+            });
+
+
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+            var dataTablesBody = $('.dataTables_scrollBody');
+            var fixedScroll = $('#fixedScroll');
+
+            function updateScrollContent() {
+                var scrollWidth = dataTablesBody[0].scrollWidth;
+                $('#scrollContent').width(scrollWidth);
+            }
+
+            dataTablesBody.on('scroll', function() {
+                fixedScroll.scrollLeft(dataTablesBody.scrollLeft());
+            });
+
+            // Appeler columns.adjust() seulement après le chargement complet
+            setTimeout(() => {
+                $('#glassTable').DataTable().columns.adjust();
+            }, 500);
+
+
+
+            fixedScroll.on('scroll', function() {
+                dataTablesBody.scrollLeft(fixedScroll.scrollLeft());
+            });
+
+            
+
+            // Initialiser la position
+            updateScrollContent();
+
+            $('#upload-form').on('submit', function(event) {
+                event.preventDefault();
+                var formData = new FormData(this);
+
+                $('#progress-bar').show();
+                $('#loading-icon').show();
+
+                $.ajax({
+                    url: '/upload',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        $('#progress-bar').hide();
+                        $('#loading-icon').hide();
+
+                        $('.progress-bar').width('0%');
+                        $('.progress-bar').attr('aria-valuenow', 0);
+
+                        location.reload();
+                    },
+                    error: function(error) {
+                        $('#progress-bar').hide();
+                        $('#loading-icon').hide();
+
+                        $('.progress-bar').width('0%');
+                        $('.progress-bar').attr('aria-valuenow', 0);
+
+                        alert('Erreur lors du téléchargement du fichier.');
+                    }
+                });
+            });
+
+            socket.on('progress', function(msg) {
+                if (msg.percent_complete) {
+                    var percentComplete = msg.percent_complete;
+                    $('.progress-bar').width(percentComplete + '%');
+                    $('.progress-bar').attr('aria-valuenow', percentComplete);
+                    $('.progress-bar').css('background-color', getColor(percentComplete));
+                } else if (msg.message) {
+                    console.log(msg.message);
+                }
+            });
+
+            function getColor(percentComplete) {
+                if (percentComplete < 50) {
+                    return 'blue';
+                } else if (percentComplete < 75) {
+                    return 'green';
+                } else {
+                    return 'red';
+                }
+            }
+
+            $('#download-excel-btn').on('click', function() {
+                window.location.href = '/download_excel';
+            });
+        });
+
+
+    </script>
+</body>
+</html>
