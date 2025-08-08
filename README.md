@@ -150,17 +150,11 @@ If you use any part of this repository—including the workflow, prompts, datase
 
 ```bibtex
 @misc{ouanzougui2025glass,
-  author       = {OUANZOUGUI},
+  author       = {OUANZOUGUI Abdelhak},
   title        = {Predicting Glass Dissolution Rates with AI: A Langflow-Based Workflow},
   year         = 2025,
-  url          = {https://github.com/your-username/glass-ai-dissolution-rate}
+  url          = {https://github.com/OUANZOUGUIAbdelhak/GLASS-GPT}
 }
 ```
 
----
-
-## 📚 References
-
-1. Gin, S., et al. *Can a simple topological-constraints-based model predict the initial dissolution rate of borosilicate and aluminosilicate glasses?* npj Materials Degradation, 2020.
-2. \[List of all 20 article titles and DOIs here, if permitted]
 
